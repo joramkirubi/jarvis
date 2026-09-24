@@ -1,642 +1,229 @@
-# 🤖 JARVIS — Voice-Activated Desktop Assistant
+# Jarvis Desktop for Joram
 
-JARVIS is a Python-powered desktop assistant that combines **acoustic activation, desktop automation, AI voice conversations, and text-to-speech**.
+Speak to Jarvis, launch approved apps and websites, open browser searches, and explicitly save preferences between sessions. This is a Windows desktop upgrade of [hectorg2211/jarvis](https://github.com/hectorg2211/jarvis).
 
-A double clap can activate Jarvis, launch a personalized workspace, play a welcome message, or start a real-time voice conversation through ElevenLabs Conversational AI.
+## What is included
 
-The project is inspired by the idea of a personal desktop assistant that responds naturally and helps prepare your computer for work.
+| Feature | Status |
+| --- | --- |
+| ElevenLabs voice conversation | Included; internet and your API key required |
+| Double clap to start a conversation | Included; or use `--now` |
+| Spoken app/website/folder launching | Included through a local allowlist |
+| Browser searches | Included; opens Google, does not read results |
+| Persistent preference memory | Included; local SQLite, explicit save/recall |
+| Tool permissions and dry run | Included |
+| Optional 48 kHz stereo microphone capture | Included; converts to 16 kHz mono for ElevenLabs |
+| Automated unit tests and CI workflow | Included |
+| Original Spotify/Chrome/Cursor welcome flow | Preserved in `jarvis.py` |
+| Wake word “Jarvis”, screen reading, document reading/editing | Not included |
+| Email, calendar, task management, autonomous multi-step routines | Not included |
+| Offline voice AI, graphical panel, plugin marketplace | Not included |
 
----
+The modules provide a foundation for later features; this ZIP does not implement every item on the future roadmap.
 
-## ✨ Features
+## 1. Install without losing your working copy
 
-### 👏 Double-Clap Activation
+1. Stop your old Jarvis with **Ctrl+C**.
+2. Extract this ZIP to a **new folder**, for example `C:/Users/Joram Kirubi/jarvis-desktop-upgrade`. Keep the old folder as your backup.
+3. Open the new folder in VS Code. The correct folder directly contains `jarvis_chat.py` and this README.
+4. Copy your own `.env` from the old folder to this folder. Do not share it. Do not copy the old `.venv`; create a new one below.
+5. If you never had a `.env`, copy `.env.example` to `.env`, then replace the key placeholder.
 
-Jarvis continuously monitors the selected microphone and detects two claps within a configurable time window.
-
-The detection system includes:
-
-- Adaptive background-noise detection
-- Configurable clap sensitivity
-- False-trigger protection
-- Automatic microphone selection
-- Manual microphone override
-- Input-device probing
-- Cooldown and retrigger protection
-
-No wake word is required.
-
----
-
-### 🖥️ Desktop Workspace Automation
-
-Running:
-
-```bash
-python jarvis.py
-```
-
-starts the desktop automation mode.
-
-After detecting a double clap, Jarvis can:
-
-- Open Spotify or another configured media URL
-- Launch configured websites in Google Chrome
-- Open or focus Cursor
-- Move Chrome windows to configured monitors
-- Open applications in fullscreen
-- Play a personalized Jarvis-style welcome message
-- Prepare a working environment automatically
-
-The exact behaviour can be customized through environment variables and constants in `jarvis.py`.
-
----
-
-### 🗣️ AI Voice Conversations
-
-Jarvis also includes a conversational mode powered by **ElevenLabs Conversational AI**.
-
-Run:
+In the **VS Code Git Bash terminal**:
 
 ```bash
-python jarvis_chat.py
+py -m venv .venv
+source .venv/Scripts/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-Then clap twice to begin talking with Jarvis.
+In PowerShell instead, activation is `.\.venv\Scripts\Activate.ps1`. Do not paste that command into Git Bash.
 
-You can also bypass clap detection:
+Use your current Python 3.14 first. If a dependency fails to install and reports no matching wheel, install Python 3.12 alongside it and create a fresh environment using `py -3.12 -m venv .venv` in a fresh project copy. Tests here were run on Python 3.12; the CI configuration also covers 3.14 but has not been run on GitHub for you.
+
+## 2. Select the upgraded ElevenLabs agent
+
+A separate agent has been configured in your connected ElevenLabs workspace:
+
+- Name: **Jarvis Desktop — Apps, Search & Memory**
+- Agent ID: `agent_5601m39sh6kne8tt9d7wxgpqwz2j`
+- Client tool: `jarvis_desktop`
+- Tool ID: `tool_2501m39shpv2emts6zgyf724j4px`
+
+Edit `.env`. Keep your real key and your working microphone choice, and set this agent ID:
+
+```dotenv
+ELEVENLABS_API_KEY=your_real_key_here
+ELEVENLABS_AGENT_ID=agent_5601m39sh6kne8tt9d7wxgpqwz2j
+```
+
+**Replace an existing `ELEVENLABS_AGENT_ID` line; do not add duplicates.** The old ID points to your old conversational agent and will not give you the new tools. A variable already exported in the terminal can override `.env`; open a fresh terminal if values seem stale. Restart the Python program after changing configuration.
+
+Your key must belong to the workspace containing this agent and have **ElevenAgents → Write** permission (`convai_write`). Your earlier signed-URL request failed with Read-only permission. For the separate original fixed welcome speech, retain **Text to Speech → Access** and `ELEVENLABS_VOICE_ID`. Other unrelated API permissions are not needed for these desktop commands.
+
+You do not need to recreate the tool in the dashboard. `agent_prompt.txt` and `agent_tool.json` are included as references if you later rebuild the agent in another workspace. For that case create a client tool from the JSON, attach it to your agent, use the prompt, set both agent audio formats to PCM 16000, enable authentication and the `client_tool_call` client event, and put the new agent ID in `.env`. Keep the tool name exactly `jarvis_desktop`.
+
+The dashboard's browser preview does not execute Python tools on your laptop. Run this Python client to use desktop actions.
+
+## 3. Check local tools, then talk
+
+These commands do not use ElevenLabs:
+
+```bash
+python desktop_tools.py list
+python desktop_tools.py open github --dry-run
+python -m unittest discover -s tests -v
+```
+
+Start voice conversation:
 
 ```bash
 python jarvis_chat.py --now
 ```
 
-Jarvis can then:
+Wait for Jarvis's greeting, then say:
 
-- Listen through your microphone
-- Convert your speech for the AI agent
-- Maintain a real-time conversation
-- Generate intelligent responses
-- Speak responses through your speakers/headphones
-- Display both user transcripts and Jarvis responses in the terminal
+- “What applications can you open?”
+- “Open GitHub.”
+- “Open Notepad.”
+- “Open VS Code.”
+- “Search the web for Python desktop automation tutorials.”
+- “Remember that I prefer short answers.”
+- “What preferences have you saved for me?”
 
-Example:
+The terminal prints `Desktop tool: open OK` or `FAILED` when the local handler runs. An OK launch means Windows/browser accepted the request; it does not verify that a visible window appeared. Search opens a page and cannot summarize it. The model may need a clarification if a target is ambiguous.
 
-```text
-You: Explain APIs using a restaurant example.
-
-Jarvis: Imagine you're sitting at a restaurant...
-```
-
-The conversation continues until the session ends or you press `Ctrl+C`.
-
----
-
-## 🧠 How It Works
-
-Jarvis currently has two primary operating modes.
-
-### Mode 1 — Desktop Automation
-
-```text
-Microphone
-    ↓
-Audio Stream
-    ↓
-Adaptive Noise Detection
-    ↓
-Double-Clap Detection
-    ↓
-Jarvis Activation
-    ↓
-Desktop Automation
-    ├── Spotify / Media
-    ├── Chrome
-    ├── Cursor
-    └── ElevenLabs Welcome Voice
-```
-
-### Mode 2 — AI Conversation
-
-```text
-Microphone
-    ↓
-Double Clap
-    ↓
-Jarvis Conversation Mode
-    ↓
-ElevenLabs Conversational AI
-    ↓
-AI Response
-    ↓
-Jarvis Voice
-    ↓
-Speakers / Headphones
-```
-
-The microphone stream used for clap detection closes before the conversational audio stream begins so the two systems do not compete for the microphone.
-
----
-
-## 🛠️ Technology Stack
-
-Jarvis currently uses:
-
-- **Python**
-- **NumPy** — audio signal calculations
-- **SoundDevice / PortAudio** — microphone and speaker access
-- **ElevenLabs Text-to-Speech**
-- **ElevenLabs Conversational AI**
-- **WebSockets** — real-time AI communication
-- **python-dotenv** — environment configuration
-- **Windows APIs** — window detection, positioning and application control
-- **Google Chrome**
-- **Cursor**
-
----
-
-## 📁 Project Structure
-
-```text
-jarvis/
-│
-├── jarvis.py
-├── jarvis_chat.py
-├── CHAT_SETUP.md
-├── requirements.txt
-├── .env.example
-├── .gitignore
-└── README.md
-```
-
-### `jarvis.py`
-
-Core desktop automation system.
-
-Responsible for:
-
-- Clap detection
-- Microphone selection
-- Desktop automation
-- Chrome window management
-- Cursor launching/focusing
-- ElevenLabs welcome speech
-- Welcome-audio caching
-
-### `jarvis_chat.py`
-
-Conversational AI companion.
-
-Responsible for:
-
-- Clap-to-talk activation
-- Real-time microphone capture
-- ElevenLabs Conversational AI connection
-- Audio playback
-- Conversation transcripts
-
-### `CHAT_SETUP.md`
-
-Additional configuration and troubleshooting instructions for conversational mode.
-
-### `.env.example`
-
-Template containing the environment variables used by Jarvis.
-
----
-
-# 🚀 Installation
-
-## 1. Clone the repository
+End with **Ctrl+C**. For clap activation:
 
 ```bash
-git clone https://github.com/joramkirubi/jarvis.git
-cd jarvis
+python jarvis_chat.py
 ```
 
-## 2. Create a virtual environment
+Clap twice. One conversation starts; after it ends, run the command again. Saying “Jarvis” is not a wake word in this version. While the conversation is active, speak normally without clapping again. The cloned agent currently has a 10-minute maximum session duration.
 
-Windows:
+This chat launcher does not automatically open Spotify. To use the original welcome automation, run `python jarvis.py` instead; see `LEGACY_README.md` for its constants and behavior. Avoid running both microphone listeners at once.
+
+## 4. Configure your apps and PesaIQ folder
+
+Edit `desktop_config.json` in VS Code. This is trusted local configuration, not something the model can edit.
+
+Built-in targets:
+
+| ID | Default |
+| --- | --- |
+| `github` | GitHub in default browser |
+| `chatgpt` | ChatGPT in default browser |
+| `notepad` | Windows System32 Notepad |
+| `calculator` | Windows System32 Calculator |
+| `vscode` | Per-user VS Code install |
+| `pesaiq` | Disabled until you enter your actual project folder |
+
+For `pesaiq`, replace `location` with your existing folder and set `enabled` to `true`. Example (replace with your actual path):
+
+```json
+"pesaiq": {
+  "type": "folder",
+  "location": "C:/Users/Joram Kirubi/Documents/PesaIQ",
+  "enabled": true,
+  "description": "My PesaIQ project folder"
+}
+```
+
+Then say “Open my PesaIQ folder.” It opens File Explorer; it does not read your files.
+
+If VS Code fails, find `Code.exe` through its shortcut properties and edit its location. A system install may be `C:/Program Files/Microsoft VS Code/Code.exe`. Use forward slashes in JSON paths, or escape backslashes as `\\`. App entries must identify an existing absolute `.exe` path. `.cmd`, `.bat`, shell commands and model-provided paths are not accepted. This version does not support custom application arguments.
+
+Add other entries using the same structure: `type` is `app`, `folder`, or `url`. URL entries must use HTTPS. Use a short unique ID and restart Jarvis after editing. Only enable programs you intend to make available by voice; do not add command interpreters as apps.
+
+## 5. Memory, permissions and privacy
+
+Memory is stored in `.jarvis/memory.sqlite3` under this installation. It persists across restarts in the same folder. It is plain local data, not encrypted, and is shared by anyone using this project copy. Copy this file only if you deliberately want to migrate saved preferences.
+
+The agent is instructed to save only on explicit requests. This is a model instruction, not a secret detector: **do not ask it to store passwords, keys or sensitive records**. Saving the same key replaces its previous value. Keys allow lowercase letters, numbers, underscores and hyphens (1–64 characters). Values are limited to 1,000 characters. Recall returns up to 30 matching entries; search is a case-sensitive substring match, not semantic memory.
+
+Local inspection and deletion:
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
+python desktop_tools.py recall
+python desktop_tools.py remember answer_style "Keep replies short"
+python desktop_tools.py recall answer_style
+python desktop_tools.py forget answer_style
 ```
 
-PowerShell:
+Deletion is available locally, not as a voice tool. Stop Jarvis and delete `.jarvis/memory.sqlite3` in File Explorer to reset all local preferences. This does not delete cloud conversation history.
 
-```powershell
-.\.venv\Scripts\Activate.ps1
+Voice audio, transcripts, and recalled preferences sent as tool results are processed by ElevenLabs. “Local memory” describes where the database lives; recalled content still reaches the cloud agent. The copied agent currently retains the original privacy configuration: voice recording enabled, retention value `-1`, no automatic transcript/audio deletion. Review its Privacy settings in ElevenLabs if you want different retention. Conversation service usage can incur ElevenLabs charges; no API key or credits are included in the ZIP.
+
+In `desktop_config.json`, set any action under `permissions` to `false` to disable it, then restart Jarvis. For example disable `remember` and `recall` to prevent voice access to memory. Local `forget` remains available for cleanup. No general terminal execution, email sending or file editing tool is exposed. Allowed actions run immediately when called; voice input is not identity authentication, so nearby voices may trigger them during a session.
+
+For simulated launch/search/save actions, add to `.env`:
+
+```dotenv
+JARVIS_DRY_RUN=true
 ```
 
-## 3. Install dependencies
+In dry run, app launches/searches and memory writes are simulated. List/recall still work; recall may initialize an empty database. Change back to `false` for real actions. Terminal tool logs show action/status; conversation text is also printed. There is no separate persistent audit log.
 
-```bash
-python -m pip install -r requirements.txt
-```
+## 6. Microphone settings and troubleshooting
 
----
-
-# ⚙️ Environment Configuration
-
-Jarvis loads environment variables from a `.env` file located in the same directory as `jarvis.py`.
-
-Create it from the example configuration:
-
-```bash
-copy .env.example .env
-```
-
-Then edit `.env` with your configuration.
-
-**Never commit your real `.env` file or API keys to GitHub.**
-
----
-
-## ElevenLabs Configuration
-
-```env
-ELEVENLABS_API_KEY=your_api_key_here
-ELEVENLABS_VOICE_ID=your_voice_id_here
-ELEVENLABS_MODEL_ID=eleven_multilingual_v2
-ELEVENLABS_OUTPUT_FORMAT=pcm_24000
-```
-
-### `ELEVENLABS_API_KEY`
-
-API key used to communicate with ElevenLabs.
-
-For conversational mode, the key must have access to the required ElevenLabs Conversational AI / Agents functionality.
-
-### `ELEVENLABS_VOICE_ID`
-
-Voice used for the desktop welcome message.
-
-The conversational agent has its own voice configuration.
-
-### `ELEVENLABS_AGENT_ID`
-
-Optional conversational-agent override:
-
-```env
-ELEVENLABS_AGENT_ID=your_agent_id
-```
-
-If supplied, `jarvis_chat.py` uses this agent instead of its default configured agent.
-
----
-
-# 🎙️ Microphone Configuration
-
-Jarvis attempts to detect a working microphone automatically.
-
-If the Windows default input appears silent, Jarvis scans available input devices and selects an active one.
-
-You can manually configure the microphone using:
-
-```env
-JARVIS_INPUT_DEVICE=2
-```
-
-The value can also be part of the microphone's device name.
-
-To list available audio devices:
+Keep your working mic configuration first. Defaults remain **16000 Hz, mono** for chat. List devices with:
 
 ```bash
 python -c "import sounddevice as sd; print(sd.query_devices())"
 ```
 
----
+Set `JARVIS_INPUT_DEVICE` in `.env` to the current input index or matching device name. Device indices may change after plugging in headphones or restarting Windows. Choose an input microphone, not Stereo Mix or a speaker output. The original automatic probe is retained and uses the clap capture format; its warning is not a definitive test of chat audio.
 
-# 🌐 Browser Configuration
+For a device that works at 48 kHz stereo, try:
 
-URLs opened by Jarvis can be configured through `.env`.
-
-Example:
-
-```env
-CLAUDE_CODE_URL=https://chatgpt.com
-TASARADAR_URL=https://github.com/your_github_username
+```dotenv
+JARVIS_CHAT_INPUT_RATE=48000
+JARVIS_CHAT_INPUT_CHANNELS=2
 ```
 
-Additional URL configuration may be available depending on the desktop workflow configured in `jarvis.py`.
+These settings affect conversation input only; capture is averaged to mono and filtered/downsampled to 16 kHz before sending to ElevenLabs. Supported rates are 16000 and 48000, with 1 or 2 channels. They do not change Windows settings or clap detection. If stereo averaging causes cancellation or unclear voice, try one channel. Output remains 16 kHz mono on the Windows default playback device.
 
----
+| Symptom | What to check |
+| --- | --- |
+| Jarvis talks but cannot hear you | Windows Sound input test first; select the correct microphone, check mute/privacy permission/input level; use headphones to reduce echo. Then verify the device index and input format. |
+| `PortAudioError` | Device may reject the selected rate/channels or be busy. Close other listeners; try your previously working settings and `--now`. |
+| Recording/listener hangs | Ctrl+C; restart terminal and audio device. Do not leave several Jarvis processes running. Test the mic in Windows before retrying Python. |
+| Clap mode fails but `--now` works | Clap detection uses `jarvis.py` sample rate/constants separately. Tune those as described in the legacy README. |
+| 401 / missing `convai_write` | Enable ElevenAgents Write on the actual API key loaded by this process. |
+| 401 / missing `text_to_speech` | Enable Text to Speech Access for the original welcome script. |
+| SSL certificate verification error | Check the existing Kaspersky encrypted-connection exception/trust configuration for `api.elevenlabs.io`; never disable Python TLS verification. |
+| Jarvis talks but no tool log appears | Check the new agent ID in `.env`, fresh process, correct workspace and attached `jarvis_desktop` client tool. Old agent has no desktop tool. |
+| Tool says FAILED | Check enabled target, action permission, exact existing `.exe`/folder path, default browser, and JSON syntax. Use local CLI below to isolate cloud from desktop. |
+| `ModuleNotFoundError` | Activate this folder's `.venv`; reinstall requirements using `python -m pip`. |
+| Changes seem ignored | Stop and restart; terminal environment values override dotenv values. |
 
-# ▶️ Running Jarvis
-
-## Desktop Automation Mode
-
-Start Jarvis with:
+Local launch test (really opens the target):
 
 ```bash
-python jarvis.py
+python desktop_tools.py open github
+python desktop_tools.py open vscode
 ```
 
-You should see a message indicating that Jarvis is listening.
+Keep your API key out of screenshots and support messages. Share the exception type, action name and relevant non-secret configuration instead.
 
-Clap twice.
+## 7. Files and developer notes
 
-When the double clap is detected, Jarvis runs the configured welcome sequence.
+- `jarvis.py`: original launcher, unchanged from the supplied ZIP.
+- `jarvis_chat.py`: conversation client and clap activation, registers `jarvis_desktop`.
+- `desktop_tools.py`: local allowlist, launch/search actions, SQLite memory and CLI.
+- `audio_pcm.py`: stateful audio conversion.
+- `desktop_config.json`: trusted target definitions and action permissions.
+- `.env.example`: non-secret configuration template.
+- `agent_prompt.txt`, `agent_tool.json`: saved agent instructions/tool definition.
+- `tests/`: mocked desktop/SDK wiring tests and synthetic audio conversion tests.
+- `.github/workflows/tests.yml`: Windows/Linux unit tests on Python 3.12/3.14 when pushed to GitHub. It does not deploy anything or make billable calls.
+- `LEGACY_README.md`: original project documentation.
 
-Stop Jarvis using:
+To add another capability, implement a constrained handler, update the client tool's schema and agent instructions, add tests, then register it in the Python client. Do not turn speech into an unrestricted shell command. No full plugin system is implemented yet.
 
-```text
-Ctrl+C
-```
+Validation for this ZIP: 14 unit/integration-wiring tests passed on Linux/Python 3.12. Tests run with mocked browser/process effects; audio conversion checked with synthetic PCM. Agent prompt and tool attachment read back from ElevenLabs. Windows hardware, real app launch paths, live voice recognition and full voice-to-tool execution still need the first local run on your laptop.
 
----
+## 8. Rollback
 
-# 💬 Running Conversational Jarvis
-
-Start clap-to-talk mode:
-
-```bash
-python jarvis_chat.py
-```
-
-Jarvis waits for a double clap before starting the conversation.
-
-To begin immediately:
-
-```bash
-python jarvis_chat.py --now
-```
-
-Wait for Jarvis to connect, then start speaking.
-
-The terminal displays conversation transcripts:
-
-```text
-You: What is an API?
-
-Jarvis: An API is a way for two pieces of software to communicate...
-```
-
-Press:
-
-```text
-Ctrl+C
-```
-
-to end the session.
-
-For additional configuration, see:
-
-```text
-CHAT_SETUP.md
-```
-
----
-
-# 🎚️ Clap Detection Tuning
-
-Clap detection can be adjusted using constants near the top of `jarvis.py`.
-
-| Constant            | Purpose                                                                                 |
-| ------------------- | --------------------------------------------------------------------------------------- |
-| `SPIKE_RATIO`       | Determines how much louder a sound must be than the background noise to count as a clap |
-| `COOLDOWN_S`        | Minimum cooldown between detected clap events                                           |
-| `MIN_DOUBLE_GAP_S`  | Minimum allowed time between the two claps                                              |
-| `MAX_DOUBLE_GAP_S`  | Maximum allowed time between the two claps                                              |
-| `BLOCK_MS`          | Audio-analysis window size                                                              |
-| `MIN_RMS`           | Minimum absolute audio level considered                                                 |
-| `SAMPLE_RATE`       | Microphone sampling rate                                                                |
-| `RETRIGGER_RATIO`   | Determines when the detector becomes ready for another clap                             |
-| `NOISE_FLOOR_ALPHA` | Controls how quickly Jarvis adapts to background noise                                  |
-
-If Jarvis triggers too easily, increase `SPIKE_RATIO`.
-
-If Jarvis misses claps, decrease it slightly.
-
----
-
-# 🔊 Welcome Voice Caching
-
-Jarvis can cache the generated ElevenLabs welcome message.
-
-By default, cached audio is stored under:
-
-```text
-.cache/jarvis_welcome/
-```
-
-When the welcome phrase, voice, model and output format have not changed, Jarvis can replay the cached audio instead of requesting the same speech from ElevenLabs again.
-
-This reduces unnecessary API calls and improves startup responsiveness.
-
-A custom location can be configured using:
-
-```env
-JARVIS_WELCOME_CACHE_DIR=your_cache_directory
-```
-
----
-
-# 🔐 Security & Privacy
-
-Jarvis interacts with microphones, external APIs and desktop applications, so credentials and permissions should be handled carefully.
-
-### API Keys
-
-Never place real API keys directly inside source code.
-
-Store them in:
-
-```text
-.env
-```
-
-The repository should only contain:
-
-```text
-.env.example
-```
-
-with placeholder values.
-
-### Microphone
-
-Jarvis accesses the computer's microphone for clap detection and conversational interaction.
-
-During an active ElevenLabs conversational session, microphone audio is transmitted to ElevenLabs for processing.
-
-### Logs
-
-Jarvis avoids intentionally printing API keys or raw authentication responses when conversational connection errors occur.
-
-### External Services
-
-Using Jarvis may involve third-party services including ElevenLabs, Spotify, websites opened through Chrome, and other services configured by the user.
-
-Their respective privacy policies and terms apply.
-
----
-
-# ⚠️ Current Limitations
-
-Jarvis is currently an experimental desktop assistant rather than a complete autonomous computer-control agent.
-
-The conversational version currently does **not** independently:
-
-- Browse the web
-- Read arbitrary files
-- Inspect the computer screen
-- Maintain persistent memory across sessions
-- Execute arbitrary spoken desktop commands
-- Control every desktop application
-- Understand everything currently displayed on the computer
-
-These capabilities may be introduced gradually as the architecture evolves.
-
----
-
-# 🗺️ Roadmap
-
-Potential future development includes:
-
-- [ ] Wake-word activation such as **"Jarvis"**
-- [ ] Spoken desktop commands
-- [ ] Application launching through natural language
-- [ ] Web search and research
-- [ ] Screen understanding
-- [ ] File and document interaction
-- [ ] Persistent conversational memory
-- [ ] Calendar integration
-- [ ] Email integration
-- [ ] Task management
-- [ ] Custom tools and function calling
-- [ ] Multi-step AI workflows
-- [ ] Improved desktop automation
-- [ ] Modular plugin architecture
-- [ ] Local/offline capabilities
-- [ ] Graphical control panel
-- [ ] User-configurable automation routines
-- [ ] Improved security controls and permissions
-- [ ] Automated tests and CI/CD
-
-The long-term direction is to evolve Jarvis from a clap-triggered desktop automation experiment into a more capable **personal AI desktop assistant**.
-
----
-
-# 🧰 Troubleshooting
-
-### Wrong or quiet microphone
-
-Jarvis probes the default Windows input.
-
-If it appears silent, Jarvis attempts to locate another working input.
-
-To force a particular microphone:
-
-```env
-JARVIS_INPUT_DEVICE=2
-```
-
----
-
-### No reaction to claps
-
-Try lowering:
-
-```python
-SPIKE_RATIO
-```
-
-slightly.
-
-Also try clapping closer to the microphone.
-
----
-
-### Too many false triggers
-
-Increase:
-
-```python
-SPIKE_RATIO
-```
-
-or adjust:
-
-```python
-COOLDOWN_S
-```
-
----
-
-### PortAudio / audio errors
-
-Check:
-
-- Windows microphone permissions
-- Audio drivers
-- Input-device configuration
-- Supported sample rates
-
-If necessary, try changing:
-
-```python
-SAMPLE_RATE = 48000
-```
-
----
-
-### No welcome speech
-
-Confirm that `.env` contains:
-
-```env
-ELEVENLABS_API_KEY=...
-ELEVENLABS_VOICE_ID=...
-```
-
-Then restart the terminal and Jarvis.
-
----
-
-### Conversational Jarvis will not connect
-
-Check:
-
-- Internet connection
-- ElevenLabs API key
-- ElevenLabs Agents / Conversational AI permissions
-- Agent ID
-- Microphone permissions
-- WebSocket connectivity
-
-See `CHAT_SETUP.md` for additional troubleshooting.
-
----
-
-# 💡 Project Vision
-
-Jarvis started as a simple experiment:
-
-> **Can a computer recognize two claps and prepare my workspace automatically?**
-
-That experiment has evolved into a voice-enabled desktop assistant capable of combining audio detection, desktop automation and conversational AI.
-
-The project explores how AI can move beyond traditional chat interfaces and become part of the everyday desktop environment.
-
----
-
-# 👨‍💻 Author
-
-**Joram Kirubi**
-
-Software Engineer | AI & Automation Developer
-
-GitHub: `@joramkirubi`
-
----
-
-## ⭐ Support the Project
-
-If you find Jarvis interesting, consider starring the repository.
-
-Contributions, experiments and ideas for extending the assistant are welcome.
-
----
-
-**JARVIS is under active development.**
+Stop this client and return to your old project folder/environment. Your original agent remains `agent_5801m378382te8bs46qtwmncjqap`; it was not modified. Alternatively use that ID in `.env` for the old conversational behavior. The new desktop tool will then not be invoked. Your original `jarvis.py` welcome flow is also still available here.

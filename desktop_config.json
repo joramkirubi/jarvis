@@ -1,0 +1,11 @@
+{
+  "permissions": {"list": true, "open": true, "search": true, "remember": true, "recall": true},
+  "targets": {
+    "github": {"type": "url", "location": "https://github.com", "enabled": true, "description": "GitHub website"},
+    "chatgpt": {"type": "url", "location": "https://chatgpt.com", "enabled": true, "description": "ChatGPT website"},
+    "notepad": {"type": "app", "location": "%WINDIR%/System32/notepad.exe", "enabled": true, "description": "Windows Notepad"},
+    "calculator": {"type": "app", "location": "%WINDIR%/System32/calc.exe", "enabled": true, "description": "Windows Calculator"},
+    "vscode": {"type": "app", "location": "%LOCALAPPDATA%/Programs/Microsoft VS Code/Code.exe", "enabled": true, "description": "VS Code; edit location if installed elsewhere"},
+    "pesaiq": {"type": "folder", "location": "C:/Users/Joram Kirubi/REPLACE_WITH_PESAIQ_FOLDER", "enabled": false, "description": "PesaIQ project folder; configure path before enabling"}
+  }
+}

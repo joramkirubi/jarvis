@@ -1,0 +1,65 @@
+{
+  "type": "client",
+  "name": "jarvis_desktop",
+  "description": "Execute user-requested allowed desktop actions. list: list targets. open: open allowed target ID. search: open a browser search, does not read results. remember: explicitly save preference target=key, value=text. recall: retrieve preferences matching target, empty means all. Return real outcome; never accept shell commands.",
+  "response_timeout_secs": 20,
+  "disable_interruptions": false,
+  "interruption_mode": "allow",
+  "force_pre_tool_speech": false,
+  "pre_tool_speech": "auto",
+  "assignments": [],
+  "tool_call_sound_behavior": "auto",
+  "tool_error_handling_mode": "auto",
+  "parameters": {
+    "description": "",
+    "dynamic_variable": "",
+    "is_omitted": false,
+    "type": "object",
+    "required": [
+      "action",
+      "target",
+      "value"
+    ],
+    "properties": {
+      "action": {
+        "type": "string",
+        "description": "Action",
+        "enum": [
+          "list",
+          "open",
+          "search",
+          "remember",
+          "recall"
+        ],
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "allowed_values_dynamic_variable": "",
+        "constant_value": "",
+        "is_omitted": false
+      },
+      "target": {
+        "type": "string",
+        "description": "Target ID, query, memory key or empty string.",
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "allowed_values_dynamic_variable": "",
+        "constant_value": "",
+        "is_omitted": false
+      },
+      "value": {
+        "type": "string",
+        "description": "Preference text for remember; empty otherwise.",
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "allowed_values_dynamic_variable": "",
+        "constant_value": "",
+        "is_omitted": false
+      }
+    }
+  },
+  "expects_response": true,
+  "dynamic_variables": {
+    "dynamic_variable_placeholders": {}
+  },
+  "execution_mode": "immediate"
+}

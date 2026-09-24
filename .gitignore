@@ -11,3 +11,6 @@ __pycache__/
 .env
 .cache/
 
+.jarvis/
+mic_test.wav
+*.zip

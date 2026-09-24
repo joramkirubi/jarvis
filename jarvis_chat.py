@@ -7,22 +7,27 @@ import time
 import jarvis
 import sounddevice as sd
 from elevenlabs.client import ElevenLabs
-from elevenlabs.conversational_ai.conversation import AudioInterface, Conversation
+from elevenlabs.conversational_ai.conversation import AudioInterface, Conversation, ClientTools
 
-AGENT_ID = 'agent_5801m378382te8bs46qtwmncjqap'
+from desktop_tools import DesktopTools
+from audio_pcm import InputPCM
+
+AGENT_ID = 'agent_5601m39sh6kne8tt9d7wxgpqwz2j'
 
 
 class DesktopAudio(AudioInterface):
     """16kHz mono PCM, using the same sounddevice mic as clap detection."""
-    def __init__(self, device):
+    def __init__(self, device, rate=16000, channels=1):
         self.device = device
+        self.rate, self.channels = rate, channels
+        self.converter = InputPCM(rate, channels)
         self.lock = threading.Lock()
         self.pending = bytearray()
         self.streams = []
 
     def start(self, input_callback):
         def capture(data, frames, timing, status):
-            input_callback(bytes(data))
+            input_callback(self.converter.convert(bytes(data)))
 
         def playback(out, frames, timing, status):
             size = len(out)
@@ -36,8 +41,8 @@ class DesktopAudio(AudioInterface):
                 dtype='int16', blocksize=320, callback=playback)
             self.streams.append(output)
             output.start()
-            microphone = sd.RawInputStream(device=self.device, samplerate=16000,
-                channels=1, dtype='int16', blocksize=4000, callback=capture)
+            microphone = sd.RawInputStream(device=self.device, samplerate=self.rate,
+                channels=self.channels, dtype='int16', blocksize=self.rate // 4, callback=capture)
             self.streams.append(microphone)
             microphone.start()
         except Exception:
@@ -103,16 +108,23 @@ def main():
     conversation = None
     audio = None
     try:
+        rate = int(os.getenv('JARVIS_CHAT_INPUT_RATE', '16000'))
+        channels = int(os.getenv('JARVIS_CHAT_INPUT_CHANNELS', '1'))
+        InputPCM(rate, channels)  # Validate before opening audio.
+        desktop = DesktopTools(dry_run=os.getenv('JARVIS_DRY_RUN', '').lower() == 'true')
+        client_tools = ClientTools()
+        client_tools.register('jarvis_desktop', desktop.handle)
         device = jarvis._choose_input_device(jarvis.block_samples())
-        sd.check_input_settings(device=device, samplerate=16000, channels=1, dtype='int16')
+        sd.check_input_settings(device=device, samplerate=rate, channels=channels, dtype='int16')
         sd.check_output_settings(samplerate=16000, channels=1, dtype='int16')
         if not args.now:
             wait_for_claps(device)
-        audio = DesktopAudio(device)
+        audio = DesktopAudio(device, rate, channels)
         conversation = Conversation(
             client=ElevenLabs(api_key=key),
             agent_id=os.getenv('ELEVENLABS_AGENT_ID', AGENT_ID),
             requires_auth=True,
+            client_tools=client_tools,
             audio_interface=audio,
             callback_agent_response=lambda message: print('Jarvis:', message),
             callback_user_transcript=lambda message: print('You:', message),
@@ -130,7 +142,10 @@ def main():
         return 1
     finally:
         if conversation is not None:
-            conversation.end_session()
+            try:
+                conversation.end_session()
+            except Exception:
+                pass
         if audio is not None:
             audio.stop()
     return 0
