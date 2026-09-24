@@ -14,3 +14,4 @@ __pycache__/
 .jarvis/
 mic_test.wav
 *.zip
+models/

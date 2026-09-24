@@ -1,5 +1,9 @@
 # Jarvis Desktop for Joram
 
+## Local dashboard
+
+Run `python jarvis_dashboard.py` for the local Jarvis Command Centre: live voice state, conversation, app launchers, memory and audio settings. See [DASHBOARD.md](DASHBOARD.md) for setup, sleep/wake controls and troubleshooting.
+
 Speak to Jarvis, launch approved apps and websites, open browser searches, and explicitly save preferences between sessions. This is a Windows desktop upgrade of [hectorg2211/jarvis](https://github.com/hectorg2211/jarvis).
 
 ## What is included
@@ -15,9 +19,10 @@ Speak to Jarvis, launch approved apps and websites, open browser searches, and e
 | Optional 48 kHz stereo microphone capture | Included; converts to 16 kHz mono for ElevenLabs |
 | Automated unit tests and CI workflow | Included |
 | Original Spotify/Chrome/Cursor welcome flow | Preserved in `jarvis.py` |
-| Wake word “Jarvis”, screen reading, document reading/editing | Not included |
+| “Hey Jarvis” wake activation and local dashboard | Included; see DASHBOARD.md |
+| Screen reading, document reading/editing | Not included |
 | Email, calendar, task management, autonomous multi-step routines | Not included |
-| Offline voice AI, graphical panel, plugin marketplace | Not included |
+| Offline voice conversation and plugin marketplace | Not included |
 
 The modules provide a foundation for later features; this ZIP does not implement every item on the future roadmap.
 
@@ -100,7 +105,7 @@ End with **Ctrl+C**. For clap activation:
 python jarvis_chat.py
 ```
 
-Clap twice. One conversation starts; after it ends, run the command again. Saying “Jarvis” is not a wake word in this version. While the conversation is active, speak normally without clapping again. The cloned agent currently has a 10-minute maximum session duration.
+Clap twice. One conversation starts; after it ends, run the command again. For “Hey Jarvis” activation, use `python jarvis_wake.py` or enable wake listening in the dashboard. While the conversation is active, speak normally without clapping again. The cloned agent currently has a 10-minute maximum session duration.
 
 This chat launcher does not automatically open Spotify. To use the original welcome automation, run `python jarvis.py` instead; see `LEGACY_README.md` for its constants and behavior. Avoid running both microphone listeners at once.
 
