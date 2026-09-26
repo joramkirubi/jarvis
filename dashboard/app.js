@@ -13,7 +13,7 @@ function node(tag, text, cls) { const el=document.createElement(tag); if(text!==
 function timeLabel(t) { return new Date(t*1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
 function toast(message) { clearTimeout(toastTimer); $('toast').textContent=message; $('toast').hidden=false; toastTimer=setTimeout(()=>{$('toast').hidden=true;},4500); }
 async function api(path, body) {
-  const res=await fetch('/api/'+path,{method:body===undefined?'GET':'POST', headers:{Authorization:'Bearer '+token,...(body===undefined?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(10000)});
+  const res=await fetch('/api/'+path,{method:body===undefined?'GET':'POST', headers:{Authorization:'Bearer '+token,...(body===undefined?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(path.startsWith('google/') ? 120000 : 10000)});
   const data=await res.json();
   if(!res.ok) throw new Error(data.error || 'Request failed');
   return data;

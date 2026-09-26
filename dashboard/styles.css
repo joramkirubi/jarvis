@@ -170,3 +170,12 @@ footer{font-size:7px;line-height:1.7;gap:20px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}
 }
+
+.google-panel { grid-column: 1 / -1; }
+.google-content { padding: 20px; }
+.google-content > p { overflow-wrap: anywhere; }
+.google-content h3 { margin-top: 24px; }
+.google-proposal { padding: 16px 0; border-top: 1px solid #28434d; }
+.google-proposal pre, #googleResults pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.6; }
+.google-proposal .controls { justify-content: flex-start; }
+#googleResults { max-height: 350px; overflow: auto; margin-top: 12px; }

@@ -169,6 +169,11 @@ class VoiceRuntime:
             return self.state.tool(parameters)
         tools = ClientTools()
         tools.register('jarvis_desktop',handler)
+        def google_handler(parameters):
+            if self.cancel.is_set() or self.end_turn.is_set():
+                return json.dumps({'ok':False,'message':'Conversation is ending'})
+            return self.state.google.handle(parameters)
+        tools.register('jarvis_google', google_handler)
         audio = Audio()
         conversation = Conversation(client=ElevenLabs(api_key=key),
             agent_id=os.getenv('ELEVENLABS_AGENT_ID','agent_5601m39sh6kne8tt9d7wxgpqwz2j'),

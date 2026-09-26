@@ -10,6 +10,7 @@ from elevenlabs.client import ElevenLabs
 from elevenlabs.conversational_ai.conversation import AudioInterface, Conversation, ClientTools
 
 from desktop_tools import DesktopTools
+from google_tools import GoogleTools
 from audio_pcm import InputPCM
 
 AGENT_ID = 'agent_5601m39sh6kne8tt9d7wxgpqwz2j'
@@ -114,6 +115,7 @@ def main():
         desktop = DesktopTools(dry_run=os.getenv('JARVIS_DRY_RUN', '').lower() == 'true')
         client_tools = ClientTools()
         client_tools.register('jarvis_desktop', desktop.handle)
+        client_tools.register('jarvis_google', GoogleTools().handle)
         device = jarvis._choose_input_device(jarvis.block_samples())
         sd.check_input_settings(device=device, samplerate=rate, channels=channels, dtype='int16')
         sd.check_output_settings(samplerate=16000, channels=1, dtype='int16')

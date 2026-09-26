@@ -86,6 +86,8 @@ class DashboardTest(unittest.TestCase):
         self.assertTrue(seen['audio_interface'].closed)
         sd.RawInputStream.return_value.close.assert_called()
         sd.RawOutputStream.return_value.close.assert_called()
+        google_handler = seen['client_tools'].tools['jarvis_google'][0]
+        self.assertFalse(json.loads(google_handler({'action':'search_email'}))['ok'])
         handler = seen['client_tools'].tools['jarvis_desktop'][0]
         self.assertFalse(json.loads(handler({'action':'open','target':'github','value':''}))['ok'])
 
@@ -126,6 +128,16 @@ class HTTPTest(unittest.TestCase):
     def test_unknown_launch_is_rejected(self):
         status,data=self.request('/api/launch',{'target':'cmd /c anything'})
         self.assertEqual(status,200);self.assertFalse(json.loads(data)['ok'])
+    def test_google_approval_requires_auth_and_same_origin(self):
+        body={'id':'a'*32,'approve':True}
+        with patch.object(self.state.google,'decide') as decide:
+            self.assertEqual(self.request('/api/google/decision',body,token='wrong')[0],401)
+            self.assertEqual(self.request('/api/google/decision',body,extra={'Origin':'https://evil.example'})[0],403)
+            decide.assert_not_called()
+    def test_google_read_route_rejects_writes(self):
+        with patch.object(self.state.google,'handle') as handle:
+            self.assertEqual(self.request('/api/google/read',{'action':'draft_email'})[0],400)
+            handle.assert_not_called()
     def test_no_state_changing_get(self):
         self.assertEqual(self.request('/api/control?action=talk')[0],404)
     def test_settings_blocked_while_running(self):

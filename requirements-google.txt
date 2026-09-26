@@ -1,0 +1,4 @@
+# Optional: install after requirements.txt. Desktop voice remains usable without these.
+google-auth>=2.40,<3
+google-auth-oauthlib>=1.2,<2
+keyring>=25,<26

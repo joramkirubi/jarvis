@@ -20,6 +20,7 @@ class WiringTest(unittest.TestCase):
                 kwargs = conversation.call_args.kwargs
                 self.assertTrue(kwargs['requires_auth'])
                 registered = kwargs['client_tools'].tools
+                self.assertIn('jarvis_google', registered)
                 handler = registered['jarvis_desktop']
                 # SDK registration storage is a tuple (handler, is_async).
                 if isinstance(handler, tuple): handler = handler[0]

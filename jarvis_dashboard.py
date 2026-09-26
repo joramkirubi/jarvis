@@ -52,11 +52,12 @@ class Handler(BaseHTTPRequestHandler):
             if not self.authorized(): return
             try:
                 if path == '/api/state': self.send(200,self.server.state.snapshot())
+                elif path == '/api/google': self.send(200, {**self.server.state.google.status(), 'proposals':self.server.state.google.pending()})
                 elif path == '/api/memory': self.send(200,{'items':self.server.state.memory()})
                 else: self.send(404,{'error':'Not found'})
             except Exception: self.send(500,{'error':'Local data could not be read. Check desktop_config.json and memory database.'})
             return
-        assets = {'/':('index.html','text/html; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8'),'/styles.css':('styles.css','text/css; charset=utf-8')}
+        assets = {'/':('index.html','text/html; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8'),'/styles.css':('styles.css','text/css; charset=utf-8'),'/google.js':('google.js','text/javascript; charset=utf-8')}
         if path not in assets: self.send(404,{'error':'Not found'}); return
         name,kind = assets[path]
         self.send(200,(ROOT/'dashboard'/name).read_bytes(),kind)
@@ -74,6 +75,14 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/control': runtime.control(data.get('action'))
             elif path == '/api/launch':
                 self.send(200,json.loads(state.tool(dict(action='open',target=data.get('target'),value='')))); return
+            elif path == '/api/google/read':
+                if data.get('action') not in ('search_email','list_events','read_email'): raise ValueError('Read action required')
+                self.send(200,json.loads(state.google.handle(data))); return
+            elif path == '/api/google/decision':
+                from google_tools import GoogleError
+                try: self.send(200,state.google.decide(data.get('id'),data.get('approve')))
+                except GoogleError as error: self.send(400,{'error':str(error)})
+                return
             elif path == '/api/forget': state.forget(data.get('key'))
             elif path == '/api/settings':
                 with runtime.guard:

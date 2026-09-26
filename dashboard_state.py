@@ -6,10 +6,12 @@ import sqlite3
 import threading
 import time
 from desktop_tools import DesktopTools
+from google_tools import GoogleTools
 
 class DashboardState:
     def __init__(self, root):
         self.root = Path(root)
+        self.google = GoogleTools(self.root)
         self.lock = threading.RLock()
         self.started = time.time()
         self.status = 'idle'
