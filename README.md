@@ -232,3 +232,9 @@ Validation for this ZIP: 14 unit/integration-wiring tests passed on Linux/Python
 ## 8. Rollback
 
 Stop this client and return to your old project folder/environment. Your original agent remains `agent_5801m378382te8bs46qtwmncjqap`; it was not modified. Alternatively use that ID in `.env` for the old conversational behavior. The new desktop tool will then not be invoked. Your original `jarvis.py` welcome flow is also still available here.
+
+## Gmail and Google Calendar
+
+Jarvis can search/read Gmail, inspect your primary Google Calendar, and prepare emails or meetings for your review. Only confirmation in the local dashboard sends an email or creates a meeting and invitations. Google tokens stay in Windows Credential Manager. Voice-requested results are shared with the ElevenLabs agent.
+
+**Follow [GOOGLE_SETUP.md](GOOGLE_SETUP.md) from start to finish** for Google Cloud configuration, OAuth sign-in, the ElevenLabs client tool, testing, privacy, disconnect and troubleshooting. Install the optional `requirements-google.txt`; existing desktop features do not require Google credentials. This is a local Windows integration, not a Vercel deployment.
