@@ -1,5 +1,6 @@
 import { auth, signIn, signOut } from "@/auth";
 import VoiceControls from "./voice-controls";
+import GoogleConnection from "./google-connection";
 
 export default async function Home() {
   const session = await auth();
@@ -21,6 +22,22 @@ export default async function Home() {
             Signed in as {session.user?.email}
           </p>
           <VoiceControls />
+          <GoogleConnection />
+          <form
+            action={async () => {
+              "use server";
+              if ((await auth())?.user?.email !== "joramkirubi100@gmail.com") return;
+              await signIn("google", { redirectTo: "/" }, {
+                access_type: "offline",
+                prompt: "consent",
+                scope: "openid email profile https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/calendar.events.owned",
+              });
+            }}
+          >
+            <button className="mt-6 rounded-full border border-cyan-400 px-6 py-3 text-cyan-300">
+              Connect Gmail and Calendar
+            </button>
+          </form>
           <form
             action={async () => {
               "use server";

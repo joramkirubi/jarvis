@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@elevenlabs/react": "^1.15.2",
+    "@neondatabase/serverless": "^1.0.0",
     "next": "16.3.6",
     "next-auth": "^5.0.0-beta.32",
     "react": "19.2.8",

@@ -65,10 +65,33 @@ export default function VoiceControls() {
           ok: false,
           error: "Desktop actions are only available in the Windows app.",
         }),
-        jarvis_google: () => JSON.stringify({
-          ok: false,
-          error: "Google tools are not connected to the website yet.",
-        }),
+        jarvis_google: async (args: unknown) => {
+          if (!args || typeof args !== "object" || !("action" in args)) {
+            return JSON.stringify({ ok: false, error: "Google action is missing" });
+          }
+          const request = { ...args } as Record<string, unknown>;
+          if (request.action === "gmail_send") {
+            const to = String(request.to || "");
+            const subject = String(request.subject || "");
+            const body = String(request.body || "");
+            request.approved = window.confirm(`Send email to ${to}?\n\nSubject: ${subject}\n\n${body}`);
+            if (!request.approved) return JSON.stringify({ ok: false, error: "Email was not approved" });
+          } else if (request.action === "calendar_create") {
+            request.approved = window.confirm(`Create calendar event?\n\n${String(request.title || "")}\n${String(request.start || "")} to ${String(request.end || "")}`);
+            if (!request.approved) return JSON.stringify({ ok: false, error: "Event was not approved" });
+          }
+          try {
+            const response = await fetch("/api/google/tool", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(request),
+              cache: "no-store",
+            });
+            return JSON.stringify(await response.json());
+          } catch {
+            return JSON.stringify({ ok: false, error: "Could not reach Google tools" });
+          }
+        },
       }}
     >
       <Controls />
